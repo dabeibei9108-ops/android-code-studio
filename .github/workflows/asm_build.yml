@@ -64,39 +64,20 @@ jobs:
           echo "signing.keyAlias=android-ide" >> local.properties
           echo "signing.keyPassword=123456" >> local.properties
 
-      # 关键修改：这里改为 assembleRelease
       - name: Assemble Release APK
         run: ./gradlew :core:app:assembleRelease
 
-      # 列出文件以便调试 (查看 release 目录下到底生成了什么)
+      # 调试：列出实际生成的文件，方便排查
       - name: List APK files (release)
-        run: ls -R core/app/build/outputs/apk/release/
+        run: |
+          echo "=== Listing all APK files found ==="
+          find core/app/build/outputs/apk/release/ -name "*.apk" || echo "No APK files found via find command"
 
-      # 上传步骤 (全部指向 release 目录)
-      - name: Upload arm64-v8a Release APK
+      # 修改：使用通配符上传所有生成的 APK，不再硬编码文件名
+      # 这样无论生成的是 app-release.apk 还是 app-arm64-v8a-release.apk 都能捕获
+      - name: Upload Release APKs
         uses: actions/upload-artifact@v4
         with:
-          name: apk-arm64-v8a-release
-          path: core/app/build/outputs/apk/release/*arm64-v8a*.apk
-        if: always()
-
-      - name: Upload armeabi-v7a Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-armeabi-v7a-release
-          path: core/app/build/outputs/apk/release/*armeabi-v7a*.apk
-        if: always()
-
-      - name: Upload x86_64 Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-x86_64-release
-          path: core/app/build/outputs/apk/release/*x86_64*.apk
-        if: always()
-
-      - name: Upload universal Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-universal-release
-          path: core/app/build/outputs/apk/release/*universal*.apk
+          name: release-apks
+          path: core/app/build/outputs/apk/release/*.apk
         if: always()
